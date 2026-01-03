@@ -2,11 +2,11 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
+
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
-use std::vec::*;
+
 
 #[derive(Debug)]
 struct Node<T> {
@@ -43,6 +43,7 @@ impl<T> LinkedList<T> {
             end: None,
         }
     }
+    
 
     pub fn add(&mut self, obj: T) {
         let mut node = Box::new(Node::new(obj));
@@ -70,14 +71,58 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where
+        T:Ord+Copy,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
-        }
-	}
+            let mut merged=LinkedList::new();
+            let mut ptr_a=list_a.start;
+            let mut ptr_b=list_b.start;
+            unsafe{
+                while let (Some(node_a),Some(node_b))=(ptr_a,ptr_b)
+                {
+                    let val_a=(*node_a.as_ptr()).val;
+                    let val_b=(*node_b.as_ptr()).val;
+                    if val_a<=val_b{
+                        let next_a=(*node_a.as_ptr()).next;
+                        merged.push_node(node_a);
+                        ptr_a=next_a;
+                    }
+                    else
+                    {
+                        let next_b=(*node_b.as_ptr()).next;
+                        merged.push_node(node_b);
+                        ptr_b=next_b;
+                    }
+                }
+                while let Some(node)=ptr_a{
+                    let next=(*node.as_ptr()).next;
+                    merged.push_node(node);
+                    ptr_a=next;
+                }
+                while let Some(node)=ptr_b{
+                    let next=(*node.as_ptr()).next;
+                    merged.push_node(node);
+                    ptr_b=next;
+                }
+            }
+            merged
+    }
+    fn push_node(&mut self,node:NonNull<Node<T>>)
+            {
+                unsafe{
+                    (*node.as_ptr()).next=None;
+                    match self.end{
+                        None=>{
+                            self.start=Some(node);
+                        }
+                        Some(end_ptr)=>{
+                            (*end_ptr.as_ptr()).next=Some(node);
+                        }
+                    }
+                    self.end=Some(node);
+                    self.length+=1;
+                }
+            }
 }
 
 impl<T> Display for LinkedList<T>
@@ -146,7 +191,9 @@ mod tests {
 		let mut list_c = LinkedList::<i32>::merge(list_a,list_b);
 		println!("merged List is {}", list_c);
 		for i in 0..target_vec.len(){
-			assert_eq!(target_vec[i],*list_c.get(i as i32).unwrap());
+			let val=list_c.get(i as i32);
+            assert!(val.is_some(),"索引{}越界",i);
+            assert_eq!(target_vec[i],*val.unwrap());
 		}
 	}
 	#[test]
@@ -167,7 +214,9 @@ mod tests {
 		let mut list_c = LinkedList::<i32>::merge(list_a,list_b);
 		println!("merged List is {}", list_c);
 		for i in 0..target_vec.len(){
-			assert_eq!(target_vec[i],*list_c.get(i as i32).unwrap());
+			let val=list_c.get(i as i32);
+            assert!(val.is_some(),"索引{}越界",i);
+            assert_eq!(target_vec[i],*val.unwrap());
 		}
 	}
 }

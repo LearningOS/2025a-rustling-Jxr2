@@ -2,7 +2,7 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
+
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -18,12 +18,12 @@ where
 
 impl<T> Heap<T>
 where
-    T: Default,
+    T: Default+Ord,
 {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: Vec::new(),
             comparator,
         }
     }
@@ -37,11 +37,25 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        self.count+=1;
+        let mut idx=self.count-1;
+        while idx >0
+        {
+            let p_idx=self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx],&self.items[p_idx])
+            {
+                self.items.swap(idx,p_idx);
+                idx=p_idx;
+            }
+            else{
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
-        idx / 2
+        (idx-1) / 2
     }
 
     fn children_present(&self, idx: usize) -> bool {
@@ -49,17 +63,13 @@ where
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2
+        idx * 2+1
     }
 
     fn right_child_idx(&self, idx: usize) -> usize {
-        self.left_child_idx(idx) + 1
+        idx*2+2
     }
 
-    fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
-    }
 }
 
 impl<T> Heap<T>
@@ -75,17 +85,56 @@ where
     pub fn new_max() -> Self {
         Self::new(|a, b| a > b)
     }
+    pub(crate) fn pop_root(&mut self)->Option<T>
+    {
+        if self.is_empty()
+        {
+            return None;
+        }
+        self.count-=1;
+        let root= self.items.swap_remove(0);
+        let mut idx=0;
+        while self.left_child_idx(idx)<self.count
+        {
+            let child_idx=self.child_idx(idx);
+            if(self.comparator)(&self.items[child_idx],&self.items[idx])
+            {
+                self.items.swap(idx,child_idx);
+                idx=child_idx;
+            }
+            else{
+                break;
+            }
+        }
+        Some(root)
+    }
+    fn child_idx(&self, idx: usize) -> usize {
+        let left=self.left_child_idx(idx);
+        let right=self.right_child_idx(idx);
+        if right>=self.count{
+            left
+        }
+        else
+        {
+            if(self.comparator)(&self.items[right],&self.items[left])
+            {
+                right
+            }
+        else{
+            left
+            }
+        }
+    }
 }
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default+Ord,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        self.pop_root()
     }
 }
 
